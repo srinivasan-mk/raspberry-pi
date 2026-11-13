@@ -256,3 +256,4 @@ raspberry-pi/
    * Run `npx expo start`.
    * Open on Web (`w`) and on mobile phone via **Expo Go** QR code.
    * Verify live telemetry cards and trigger buttons.
+

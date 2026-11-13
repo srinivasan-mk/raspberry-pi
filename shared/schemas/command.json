@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CommandEnvelope",
+  "type": "object",
+  "required": ["messageId", "timestamp", "pluginId", "action", "payload"],
+  "properties": {
+    "messageId": {
+      "type": "string",
+      "description": "Unique identifier for this message"
+    },
+    "correlationId": {
+      "type": "string",
+      "description": "Correlation ID for request/response tracing"
+    },
+    "timestamp": {
+      "type": "integer",
+      "description": "Unix timestamp in seconds or milliseconds"
+    },
+    "pluginId": {
+      "type": "string",
+      "description": "Target plugin identifier (e.g. web-scraper, messaging)"
+    },
+    "action": {
+      "type": "string",
+      "description": "Action verb (e.g. fetch-usage, send, reboot)"
+    },
+    "timeoutSeconds": {
+      "type": "integer",
+      "default": 120,
+      "description": "Maximum execution time before timeout"
+    },
+    "payload": {
+      "type": "object",
+      "description": "Plugin-specific input parameters"
+    }
+  }
+}

@@ -1,0 +1,33 @@
+broker:
+  # HiveMQ Cloud cluster URL (e.g. your-cluster.s1.eu.hivemq.cloud)
+  host: "your-cluster-id.s1.eu.hivemq.cloud"
+  port: 8883
+  username: "pi_client"
+  password: "YourSecurePassword123"
+  client_id: "rpi4-edge-daemon"
+  use_tls: true
+
+pi:
+  device_id: "raspberrypi-4b-01"
+  telemetry_interval_sec: 30
+
+plugins:
+  web-scraper:
+    enabled: true
+    mode: "exec" # or "docker"
+    command: "python3 /opt/pi-plugins/web-scraper/main.py"
+    image: "pi-plugin-web-scraper:latest"
+    timeout_sec: 180
+    work_dir: "/opt/pi-plugins/web-scraper"
+    env:
+      HEADLESS: "true"
+
+  messaging:
+    enabled: true
+    mode: "exec"
+    command: "node /opt/pi-plugins/messaging/dist/index.js"
+    image: "pi-plugin-messaging:latest"
+    timeout_sec: 60
+    work_dir: "/opt/pi-plugins/messaging"
+    env:
+      TELEGRAM_BOT_TOKEN: "YOUR_TELEGRAM_BOT_TOKEN"
