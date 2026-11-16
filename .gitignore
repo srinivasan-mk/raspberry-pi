@@ -1,0 +1,23 @@
+# Binaries & builds
+bin/
+dist/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env
+
+# Expo & Web
+.expo/
+web-build/
+
+# Local session credentials
+sessions/
+auth_info_baileys/
