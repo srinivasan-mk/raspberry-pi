@@ -1,0 +1,28 @@
+{
+  "id": "messaging",
+  "name": "Zero-Cost Multi-Channel Messaging",
+  "version": "1.0.0",
+  "description": "Multi-channel notification router supporting Telegram Bot API, free WhatsApp Web (Baileys), and free SMS via Android Gateway.",
+  "author": "Antigravity Ecosystem",
+  "entrypoint": "dist/index.js",
+  "actions": [
+    {
+      "name": "send",
+      "description": "Dispatch a message to Telegram, WhatsApp, or SMS",
+      "parameters": {
+        "channel": { "type": "string", "enum": ["TELEGRAM", "WHATSAPP", "SMS", "MOCK"], "required": true },
+        "recipient": { "type": "string", "required": true },
+        "content": { "type": "string", "required": true },
+        "attachments": { "type": "array" },
+        "options": { "type": "object" }
+      }
+    },
+    {
+      "name": "status",
+      "description": "Check connection state for WhatsApp Web session or Android SMS Gateway",
+      "parameters": {}
+    }
+  ],
+  "defaultTimeoutSeconds": 60,
+  "memoryOptimized": true
+}
