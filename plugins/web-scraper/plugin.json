@@ -1,0 +1,29 @@
+{
+  "id": "web-scraper",
+  "name": "Generic Web Automation & Scraper",
+  "version": "1.0.0",
+  "description": "Headless Playwright browser automation with interactive OTP challenge handling, site navigators, and data extraction for Raspberry Pi 4B.",
+  "author": "Antigravity Ecosystem",
+  "entrypoint": "src/main.py",
+  "actions": [
+    {
+      "name": "fetch-usage",
+      "description": "Extract balance and usage metrics from telecom/utility portals (e.g., Jio AirFiber)",
+      "parameters": {
+        "target": { "type": "string", "enum": ["jio-airfiber", "generic", "mock-test"], "required": true },
+        "credentials": { "type": "object" },
+        "options": { "type": "object" }
+      }
+    },
+    {
+      "name": "navigate",
+      "description": "Generic browser action execution sequence",
+      "parameters": {
+        "url": { "type": "string", "required": true },
+        "steps": { "type": "array", "required": true }
+      }
+    }
+  ],
+  "defaultTimeoutSeconds": 180,
+  "memoryOptimized": true
+}

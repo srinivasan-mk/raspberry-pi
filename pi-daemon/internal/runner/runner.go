@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -10,6 +11,7 @@ import (
 	"log"
 	"os/exec"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,8 +21,8 @@ import (
 )
 
 type Runner struct {
-	plugins  map[string]config.PluginConfig
-	sessions *session.SessionRegistry
+	plugins           map[string]config.PluginConfig
+	sessions          *session.SessionRegistry
 	publishPromptFunc func(prompt *models.InteractivePrompt) error
 }
 
@@ -32,7 +34,16 @@ func NewRunner(plugins map[string]config.PluginConfig, sessions *session.Session
 	}
 }
 
-// Execute runs the requested plugin on-demand, handling lifecycle, timeouts, and interactive challenges
+// PromptMessageLine is emitted on stdout by a plugin when it requires interactive user input
+type PromptMessageLine struct {
+	Type           string `json:"type"` // "INTERACTIVE_PROMPT"
+	SessionId      string `json:"sessionId"`
+	PromptType     string `json:"promptType"`
+	Message        string `json:"message"`
+	TimeoutSeconds int    `json:"timeoutSeconds"`
+}
+
+// Execute runs the requested plugin on-demand, handling lifecycle, streaming stdout, and interactive challenges
 func (r *Runner) Execute(cmd *models.CommandEnvelope) *models.PluginResultEnvelope {
 	startTime := time.Now()
 	res := &models.PluginResultEnvelope{
@@ -117,12 +128,23 @@ func (r *Runner) Execute(cmd *models.CommandEnvelope) *models.PluginResultEnvelo
 		return res
 	}
 
-	var stdoutBuf, stderrBuf bytes.Buffer
-	execCmd.Stdout = &stdoutBuf
+	stdoutPipe, err := execCmd.StdoutPipe()
+	if err != nil {
+		stdinPipe.Close()
+		res.Status = "FAILED"
+		res.Error = &models.PluginError{
+			Code:    "PIPE_ERROR",
+			Message: err.Error(),
+		}
+		return res
+	}
+
+	var stderrBuf bytes.Buffer
 	execCmd.Stderr = &stderrBuf
 
 	log.Printf("[Runner] Launching on-demand plugin '%s' (mode=%s)...", cmd.PluginId, pCfg.Mode)
 	if err := execCmd.Start(); err != nil {
+		stdinPipe.Close()
 		res.Status = "FAILED"
 		res.Error = &models.PluginError{
 			Code:    "START_FAILED",
@@ -131,17 +153,71 @@ func (r *Runner) Execute(cmd *models.CommandEnvelope) *models.PluginResultEnvelo
 		return res
 	}
 
-	// Serialize and write command envelope to plugin's stdin
+	// Send initial command envelope to plugin's stdin
 	inputData, _ := json.Marshal(cmd)
+	if _, err := stdinPipe.Write(append(inputData, '\n')); err != nil {
+		log.Printf("[Runner] Warning: writing command to plugin stdin failed: %v", err)
+	}
+
+	// Safe concurrent writer for stdin (for subsequent interactive responses)
+	var stdinMu sync.Mutex
+	writeToStdin := func(data []byte) error {
+		stdinMu.Lock()
+		defer stdinMu.Unlock()
+		_, err := stdinPipe.Write(data)
+		return err
+	}
+
+	// Scan stdout line by line to intercept interactive prompts and capture output
+	var outputLines []string
+	var wg sync.WaitGroup
+	wg.Add(1)
+
 	go func() {
-		defer stdinPipe.Close()
-		_, _ = stdinPipe.Write(inputData)
-		_, _ = stdinPipe.Write([]byte("\n"))
+		defer wg.Done()
+		scanner := bufio.NewScanner(stdoutPipe)
+		for scanner.Scan() {
+			line := scanner.Text()
+			trimmed := strings.TrimSpace(line)
+			if trimmed == "" {
+				continue
+			}
+
+			// Check if line is an INTERACTIVE_PROMPT
+			var promptLine PromptMessageLine
+			if err := json.Unmarshal([]byte(trimmed), &promptLine); err == nil && promptLine.Type == "INTERACTIVE_PROMPT" {
+				log.Printf("[Runner] Plugin '%s' requested interactive challenge (session=%s, type=%s)",
+					cmd.PluginId, promptLine.SessionId, promptLine.PromptType)
+
+				prompt := &models.InteractivePrompt{
+					SessionId:      promptLine.SessionId,
+					CorrelationId:  cmd.CorrelationId,
+					PluginId:       cmd.PluginId,
+					PromptType:     promptLine.PromptType,
+					Message:        promptLine.Message,
+					TimeoutSeconds: promptLine.TimeoutSeconds,
+					Timestamp:      time.Now().Unix(),
+				}
+
+				// Handle challenge asynchronously so scanner keeps reading
+				go func(p *models.InteractivePrompt) {
+					if err := r.HandleInteractiveChallenge(p, writeToStdin); err != nil {
+						log.Printf("[Runner] Interactive challenge error: %v", err)
+					}
+				}(prompt)
+				continue
+			}
+
+			// Normal output line
+			outputLines = append(outputLines, line)
+		}
 	}()
 
 	// Wait for completion or context timeout
 	done := make(chan error, 1)
 	go func() {
+		wg.Wait()
+		stdinPipe.Close()
 		done <- execCmd.Wait()
 	}()
 
@@ -169,17 +245,26 @@ func (r *Runner) Execute(cmd *models.CommandEnvelope) *models.PluginResultEnvelo
 		}
 	}
 
-	// Parse JSON output from stdout
-	outputBytes := stdoutBuf.Bytes()
-	var rawOutput map[string]interface{}
-	if err := json.Unmarshal(outputBytes, &rawOutput); err == nil {
+	// Parse final output (inspect lines in reverse to find the JSON result payload)
+	var finalData map[string]interface{}
+	foundJson := false
+	for i := len(outputLines) - 1; i >= 0; i-- {
+		line := strings.TrimSpace(outputLines[i])
+		if strings.HasPrefix(line, "{") && strings.HasSuffix(line, "}") {
+			if err := json.Unmarshal([]byte(line), &finalData); err == nil {
+				foundJson = true
+				break
+			}
+		}
+	}
+
+	if foundJson {
 		res.Status = "SUCCESS"
-		res.Data = rawOutput
+		res.Data = finalData
 	} else {
-		// Output is plain text or partial
 		res.Status = "SUCCESS"
 		res.Data = map[string]interface{}{
-			"rawOutput": strings.TrimSpace(stdoutBuf.String()),
+			"rawOutput": strings.Join(outputLines, "\n"),
 		}
 	}
 
@@ -187,8 +272,8 @@ func (r *Runner) Execute(cmd *models.CommandEnvelope) *models.PluginResultEnvelo
 	return res
 }
 
-// RelayOtpChallenge is called when a plugin requests an interactive OTP challenge
-func (r *Runner) HandleInteractiveChallenge(prompt *models.InteractivePrompt, stdin io.Writer) error {
+// HandleInteractiveChallenge publishes challenge to HiveMQ and delivers user response to child stdin
+func (r *Runner) HandleInteractiveChallenge(prompt *models.InteractivePrompt, writeStdin func([]byte) error) error {
 	if r.publishPromptFunc == nil {
 		return errors.New("no prompt publisher configured")
 	}
@@ -199,7 +284,12 @@ func (r *Runner) HandleInteractiveChallenge(prompt *models.InteractivePrompt, st
 	}
 
 	// Register in session registry and wait for response
-	timeout := time.Duration(prompt.TimeoutSeconds) * time.Second
+	timeoutSec := prompt.TimeoutSeconds
+	if timeoutSec <= 0 {
+		timeoutSec = 120
+	}
+	timeout := time.Duration(timeoutSec) * time.Second
+
 	respChan, err := r.sessions.Register(prompt.SessionId, timeout)
 	if err != nil {
 		return fmt.Errorf("failed to register session: %w", err)
@@ -211,8 +301,10 @@ func (r *Runner) HandleInteractiveChallenge(prompt *models.InteractivePrompt, st
 			return errors.New("interactive session timed out waiting for user response")
 		}
 		// Write the code to the plugin's stdin so Playwright can resume
-		_, err := stdin.Write([]byte(resp.Response.Code + "\n"))
-		return err
+		log.Printf("[Runner] Delivering user response for session '%s' to plugin stdin", prompt.SessionId)
+		respJson, _ := json.Marshal(resp.Response)
+		return writeStdin(append(respJson, '\n'))
+
 	case <-time.After(timeout):
 		return errors.New("timed out waiting for OTP response")
 	}
