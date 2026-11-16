@@ -2,8 +2,12 @@ import sys
 from typing import Dict, Any
 from playwright.async_api import Page
 
-from .base import BaseSiteScraper
-from ..core.interactive import request_user_otp
+try:
+    from core.interactive import request_user_otp
+    from sites.base import BaseSiteScraper
+except ImportError:
+    from ..core.interactive import request_user_otp
+    from .base import BaseSiteScraper
 
 MOCK_HTML_PORTAL = """
 <!DOCTYPE html>

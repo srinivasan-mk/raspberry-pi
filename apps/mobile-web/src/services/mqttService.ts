@@ -10,7 +10,7 @@ export interface BrokerConfig {
 }
 
 export const DEFAULT_BROKER_CONFIG: BrokerConfig = {
-  host: 'your-deployment-id.emqx.cloud',
+  host: 'your-deployment-id.emqxsl.com',
   port: 8084, // Standard WSS port on EMQX Cloud Serverless
   path: '/mqtt',
   username: 'web_client',

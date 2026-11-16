@@ -64,7 +64,7 @@ func main() {
 	defer mqttClient.Disconnect()
 
 	// 7. Start Telemetry Heartbeat Ticker
-	ticker := time.NewTicker(cfg.Pi.TelemetryIntervalSec * time.Second)
+	ticker := time.NewTicker(time.Duration(cfg.Pi.TelemetryIntervalSec) * time.Second)
 	defer ticker.Stop()
 
 	stopChan := make(chan os.Signal, 1)

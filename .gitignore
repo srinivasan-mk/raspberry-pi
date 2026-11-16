@@ -18,6 +18,8 @@ venv/
 .expo/
 web-build/
 
-# Local session credentials
+# Local config & credentials
+config.yaml
+*.yaml.local
 sessions/
 auth_info_baileys/
