@@ -20,6 +20,15 @@ export const BrokerSettingsModal: React.FC<BrokerSettingsProps> = ({
   const [username, setUsername] = useState(currentConfig.username);
   const [password, setPassword] = useState(currentConfig.password);
 
+  React.useEffect(() => {
+    if (visible) {
+      setHost(currentConfig.host);
+      setPort(String(currentConfig.port));
+      setUsername(currentConfig.username);
+      setPassword(currentConfig.password);
+    }
+  }, [visible, currentConfig]);
+
   const handleSave = () => {
     onSave({
       ...currentConfig,

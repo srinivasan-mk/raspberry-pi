@@ -159,9 +159,9 @@ func (c *Client) PublishPrompt(prompt *models.InteractivePrompt) error {
 	return token.Error()
 }
 
-// PublishTelemetry publishes periodic heartbeat
+// PublishTelemetry publishes periodic heartbeat (retained=true so connecting web clients see it immediately)
 func (c *Client) PublishTelemetry(t *models.PiTelemetry) {
 	topic := "pi/telemetry/health"
 	data, _ := json.Marshal(t)
-	c.client.Publish(topic, 0, false, data)
+	c.client.Publish(topic, 0, true, data)
 }

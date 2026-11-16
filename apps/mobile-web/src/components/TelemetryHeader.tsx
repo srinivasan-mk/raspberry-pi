@@ -21,6 +21,12 @@ interface TelemetryProps {
 
 export const TelemetryHeader: React.FC<TelemetryProps> = ({ telemetry, mqttConnected, onOpenSettings }) => {
   const isOnline = mqttConnected && telemetry?.status === 'ONLINE';
+  const statusLabel = isOnline
+    ? 'ONLINE'
+    : mqttConnected
+    ? 'BROKER CONNECTED'
+    : 'OFFLINE';
+
   const temp = telemetry?.cpuTempCelsius ?? 42.0;
   const tempColor = temp < 55 ? '#10b981' : temp < 70 ? '#f59e0b' : '#ef4444';
 
@@ -46,7 +52,7 @@ export const TelemetryHeader: React.FC<TelemetryProps> = ({ telemetry, mqttConne
         <View style={styles.statusGroup}>
           <View style={[styles.badge, isOnline ? styles.badgeOnline : styles.badgeOffline]}>
             <View style={[styles.dot, isOnline ? styles.dotOnline : styles.dotOffline]} />
-            <Text style={styles.badgeText}>{isOnline ? 'ONLINE' : 'OFFLINE'}</Text>
+            <Text style={styles.badgeText}>{statusLabel}</Text>
           </View>
           <Text style={styles.settingsLink} onPress={onOpenSettings}>
             ⚙️ Broker Settings
