@@ -15,8 +15,20 @@ import { OtpModal } from './src/components/OtpModal';
 import { BrokerSettingsModal } from './src/components/BrokerSettingsModal';
 import { ResultFeed, ResultItem } from './src/components/ResultFeed';
 
+const getInitialBrokerConfig = (): BrokerConfig => {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    const saved = window.localStorage.getItem('PI_BROKER_CONFIG');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {}
+    }
+  }
+  return DEFAULT_BROKER_CONFIG;
+};
+
 export default function App() {
-  const [brokerConfig, setBrokerConfig] = useState<BrokerConfig>(DEFAULT_BROKER_CONFIG);
+  const [brokerConfig, setBrokerConfig] = useState<BrokerConfig>(getInitialBrokerConfig);
   const [mqttConnected, setMqttConnected] = useState(false);
   const [settingsVisible, setSettingsVisible] = useState(false);
 
@@ -96,6 +108,9 @@ export default function App() {
   };
 
   const handleSaveSettings = (newConfig: BrokerConfig) => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem('PI_BROKER_CONFIG', JSON.stringify(newConfig));
+    }
     setBrokerConfig(newConfig);
     mqttService.disconnect();
     setMqttConnected(false);
