@@ -1,7 +1,7 @@
 broker:
-  # HiveMQ Cloud cluster URL (e.g. your-cluster.s1.eu.hivemq.cloud)
-  host: "your-cluster-id.s1.eu.hivemq.cloud"
-  port: 8883
+  # EMQX Cloud Serverless broker URL (e.g. xxxxxx.emqx.cloud)
+  host: "your-deployment-id.emqx.cloud"
+  port: 8883 # MQTTS with TLS
   username: "pi_client"
   password: "YourSecurePassword123"
   client_id: "rpi4-edge-daemon"
@@ -15,7 +15,7 @@ plugins:
   web-scraper:
     enabled: true
     mode: "exec" # or "docker"
-    command: "python3 /opt/pi-plugins/web-scraper/main.py"
+    command: "python3 /opt/pi-plugins/web-scraper/src/main.py"
     image: "pi-plugin-web-scraper:latest"
     timeout_sec: 180
     work_dir: "/opt/pi-plugins/web-scraper"

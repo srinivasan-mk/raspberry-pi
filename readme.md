@@ -1,9 +1,9 @@
 # Raspberry Pi 4B Modular Service Bus Ecosystem
 
-A high-performance, resource-optimized, polyglot edge automation system for **Raspberry Pi 4B (Raspbian Lite)** connected to **HiveMQ Cloud (MQTT)**.
+A high-performance, resource-optimized, polyglot edge automation system for **Raspberry Pi 4B (Raspbian Lite)** connected to **EMQX Cloud / HiveMQ (MQTT)**.
 
 ## Core Highlights
-* **Pi Orchestrator Daemon**: Written in **Go** (~6 MB RAM idle, 0% CPU overhead, 24/7 HiveMQ TLS connection).
+* **Pi Orchestrator Daemon**: Written in **Go** (~6 MB RAM idle, 0% CPU overhead, 24/7 MQTT TLS connection).
 * **Ephemeral Plugin System**: Polyglot on-demand execution (Docker `--rm` / CLI sub-processes) consuming **0 MB RAM when idle**.
 * **Interactive OTP Web Automation**: Headless **Playwright** engine capable of pausing browser execution, publishing challenge prompts over MQTT, and resuming upon user OTP submission.
 * **Multi-Channel Messaging**: Telegram Bot API + Free WhatsApp Web (Baileys) + Free SMS via Android Gateway.

@@ -12,20 +12,20 @@ This guide walks you through deploying and operating the complete modular edge-c
 
 ---
 
-## 2. HiveMQ Cloud Free Cluster Setup
+## 2. EMQX Cloud Free Serverless Setup
 
-1. Sign up at [hivemq.com/cloud](https://www.hivemq.com/cloud/) and create a **Free Serverless Cluster**.
-2. Go to the **Access Management** tab:
-   * Create a credential for the Pi:
+1. Sign up at [emqx.com/en/cloud](https://www.emqx.com/en/cloud) and create a **Free Serverless Deployment** (1 Million connection minutes + 1 GB traffic free per month).
+2. Go to the **Authentication** tab:
+   * Create credentials for the Pi:
      * Username: `pi_client`
      * Password: `<ChooseAStrongPassword>`
-   * Create a credential for the Web/Mobile App:
+   * Create credentials for the Web/Mobile App:
      * Username: `web_client`
      * Password: `<ChooseAStrongPassword>`
-3. Note your Cluster URL:
-   * Host: `your-cluster-id.s1.eu.hivemq.cloud`
+3. Note your Deployment Hostname:
+   * Host: `your-deployment-id.emqx.cloud`
    * MQTTS Port (Pi Daemon): `8883` (TLS)
-   * WSS Port (Web & Mobile App): `8884` (Secure WebSockets)
+   * WSS Port (Web & Mobile App): `8084` (Secure WebSockets, path `/mqtt`)
 
 ---
 
@@ -61,10 +61,10 @@ Edit the installed configuration file:
 ```bash
 sudo nano /opt/pi-daemon/config.yaml
 ```
-Update the `broker` section with your HiveMQ Cloud cluster details:
+Update the `broker` section with your EMQX Cloud cluster details:
 ```yaml
 broker:
-  host: "your-cluster-id.s1.eu.hivemq.cloud"
+  host: "your-deployment-id.emqx.cloud"
   port: 8883
   username: "pi_client"
   password: "YourSecurePassword"

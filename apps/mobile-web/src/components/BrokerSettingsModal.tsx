@@ -24,7 +24,7 @@ export const BrokerSettingsModal: React.FC<BrokerSettingsProps> = ({
     onSave({
       ...currentConfig,
       host: host.trim(),
-      port: Number(port.trim()) || 8884,
+      port: Number(port.trim()) || 8084,
       username: username.trim(),
       password: password.trim(),
       useSSL: true,
@@ -36,16 +36,16 @@ export const BrokerSettingsModal: React.FC<BrokerSettingsProps> = ({
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.overlay}>
         <View style={styles.dialog}>
-          <Text style={styles.title}>HiveMQ Cloud Broker Settings</Text>
-          <Text style={styles.subtitle}>Configure MQTT over WebSockets (WSS Port 8884)</Text>
+          <Text style={styles.title}>EMQX Cloud Broker Settings</Text>
+          <Text style={styles.subtitle}>Configure MQTT over WebSockets (WSS Port 8084)</Text>
 
           <ScrollView style={styles.form}>
-            <Text style={styles.label}>CLUSTER HOST (e.g., xxx.s1.eu.hivemq.cloud)</Text>
+            <Text style={styles.label}>CLUSTER HOST (e.g., xxx.emqx.cloud)</Text>
             <TextInput
               style={styles.input}
               value={host}
               onChangeText={setHost}
-              placeholder="your-cluster.s1.eu.hivemq.cloud"
+              placeholder="your-deployment.emqx.cloud"
               placeholderTextColor="#64748b"
               autoCapitalize="none"
             />

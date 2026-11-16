@@ -10,8 +10,8 @@ export interface BrokerConfig {
 }
 
 export const DEFAULT_BROKER_CONFIG: BrokerConfig = {
-  host: 'your-cluster-id.s1.eu.hivemq.cloud',
-  port: 8884, // Standard WSS port on HiveMQ Cloud
+  host: 'your-deployment-id.emqx.cloud',
+  port: 8084, // Standard WSS port on EMQX Cloud Serverless
   path: '/mqtt',
   username: 'web_client',
   password: '',
