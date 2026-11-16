@@ -5,7 +5,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=pi
+User=rpi4b-admin
 WorkingDirectory=/opt/pi-daemon
 ExecStart=/opt/pi-daemon/pi-daemon -config /opt/pi-daemon/config.yaml
 Restart=always

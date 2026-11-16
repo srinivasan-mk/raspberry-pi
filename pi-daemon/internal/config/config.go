@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 	"os"
-	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -24,8 +23,8 @@ type BrokerConfig struct {
 }
 
 type PiConfig struct {
-	DeviceID             string        `yaml:"device_id"`
-	TelemetryIntervalSec time.Duration `yaml:"telemetry_interval_sec"`
+	DeviceID             string `yaml:"device_id"`
+	TelemetryIntervalSec int    `yaml:"telemetry_interval_sec"`
 }
 
 type PluginConfig struct {
