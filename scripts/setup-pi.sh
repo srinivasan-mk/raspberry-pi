@@ -73,7 +73,7 @@ chown -R "$ACTUAL_USER:$ACTUAL_USER" "$USER_HOME/.cache/ms-playwright"
 echo -e "${GREEN}✓ Playwright and Chromium installed successfully!${NC}"
 
 # 6. Setup Messaging Plugin
-echo -e "\n${BLUE}[5/7] Setting up Messaging plugin (Telegram / WhatsApp / SMS)...${NC}"
+echo -e "\n${BLUE}[5/8] Setting up Messaging plugin (Telegram / WhatsApp / SMS)...${NC}"
 mkdir -p /opt/pi-plugins/messaging
 cp -r "$SCRIPT_DIR/plugins/messaging/"* /opt/pi-plugins/messaging/
 cd /opt/pi-plugins/messaging
@@ -81,8 +81,15 @@ npm install
 npm run build
 echo -e "${GREEN}✓ Messaging plugin compiled!${NC}"
 
-# 7. Configure /opt/pi-daemon/config.yaml
-echo -e "\n${BLUE}[6/7] Configuring /opt/pi-daemon/config.yaml...${NC}"
+# 7. Setup Pi-hole Bridge Plugin
+echo -e "\n${BLUE}[6/8] Setting up Pi-hole Bridge plugin...${NC}"
+mkdir -p /opt/pi-plugins/pihole
+cp -r "$SCRIPT_DIR/plugins/pihole/"* /opt/pi-plugins/pihole/
+chmod +x /opt/pi-plugins/pihole/main.py
+echo -e "${GREEN}✓ Pi-hole bridge plugin configured!${NC}"
+
+# 8. Configure /opt/pi-daemon/config.yaml
+echo -e "\n${BLUE}[7/8] Configuring /opt/pi-daemon/config.yaml...${NC}"
 if [ ! -f "/opt/pi-daemon/config.yaml" ]; then
   echo -e "${YELLOW}Please enter your EMQX Cloud Broker details:${NC}"
   read -p "EMQX Broker Host (e.g. xxxxxx.emqxsl.com): " BROKER_HOST
@@ -122,18 +129,27 @@ plugins:
     work_dir: "/opt/pi-plugins/messaging"
     env:
       TELEGRAM_BOT_TOKEN: ""
+
+  pihole:
+    enabled: true
+    mode: "exec"
+    command: "python3 /opt/pi-plugins/pihole/main.py"
+    timeout_sec: 60
+    work_dir: "/opt/pi-plugins/pihole"
+    env:
+      PIHOLE_API_URL: "http://127.0.0.1/api"
 EOF
   echo -e "${GREEN}✓ Created /opt/pi-daemon/config.yaml${NC}"
 else
   echo -e "${YELLOW}Existing /opt/pi-daemon/config.yaml preserved.${NC}"
 fi
 
-# 8. Set File Ownership
+# 9. Set File Ownership
 chown -R "$ACTUAL_USER:$ACTUAL_USER" /opt/pi-daemon
 chown -R "$ACTUAL_USER:$ACTUAL_USER" /opt/pi-plugins
 
-# 9. Configure & Start Systemd Service
-echo -e "\n${BLUE}[7/7] Installing and starting systemd service...${NC}"
+# 10. Configure & Start Systemd Service
+echo -e "\n${BLUE}[8/8] Installing and starting systemd service...${NC}"
 cat <<EOF > /etc/systemd/system/pi-daemon.service
 [Unit]
 Description=Raspberry Pi 4B Orchestrator Daemon

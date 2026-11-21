@@ -136,6 +136,46 @@ def run_messaging_test():
         print(f"[Sim] Stderr: {res.stderr}")
         return True
 
+def run_pihole_test():
+    print("\n" + "=" * 60)
+    print("TEST 3: Pi-hole DNS Bridge Plugin")
+    print("=" * 60)
+
+    pihole_script = os.path.join(ROOT_DIR, "plugins", "pihole", "main.py")
+    if not os.path.exists(pihole_script):
+        print(f"Error: {pihole_script} not found!")
+        return False
+
+    command_envelope = {
+        "messageId": f"test_pihole_{int(time.time())}",
+        "correlationId": "corr_pihole_001",
+        "timestamp": int(time.time()),
+        "pluginId": "pihole",
+        "action": "status",
+        "payload": {}
+    }
+
+    res = subprocess.run(
+        [sys.executable, pihole_script],
+        input=json.dumps(command_envelope),
+        capture_output=True,
+        text=True,
+        cwd=os.path.join(ROOT_DIR, "plugins", "pihole")
+    )
+
+    if res.returncode == 0:
+        try:
+            data = json.loads(res.stdout)
+            print("[Sim] ✅ Pi-hole plugin response:")
+            print(json.dumps(data, indent=2))
+            return data.get("status") == "SUCCESS"
+        except Exception as e:
+            print(f"[Sim] ❌ Invalid JSON output: {e}\nRaw output: {res.stdout}")
+            return False
+    else:
+        print(f"[Sim] ❌ Pi-hole plugin error: {res.stderr}")
+        return False
+
 def main():
     print("==========================================================")
     print(" Raspberry Pi 4B Modular Service Bus - End-to-End Tests   ")
@@ -143,11 +183,14 @@ def main():
 
     t1 = run_scraper_test()
     t2 = run_messaging_test()
+    t3 = run_pihole_test()
 
     print("\n" + "=" * 60)
     print("SUMMARY")
     print("=" * 60)
     print(f"Web Scraper & Interactive OTP Flow: {'PASSED' if t1 else 'FAILED'}")
+    print(f"Multi-Channel Messaging:            {'PASSED' if t2 else 'FAILED'}")
+    print(f"Pi-hole Controller & Bridge:        {'PASSED' if t3 else 'FAILED'}")
     print(f"Multi-Channel Messaging:            {'PASSED' if t2 else 'FAILED'}")
     print("==========================================================")
 

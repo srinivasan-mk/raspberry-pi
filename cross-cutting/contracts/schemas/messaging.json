@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MessagingCommandPayload",
+  "type": "object",
+  "required": ["channel", "recipient", "content"],
+  "properties": {
+    "channel": {
+      "type": "string",
+      "enum": ["TELEGRAM", "WHATSAPP", "SMS"]
+    },
+    "recipient": {
+      "type": "string",
+      "description": "Telegram Chat ID, WhatsApp E.164 phone number, or SMS phone number"
+    },
+    "content": {
+      "type": "string",
+      "description": "Text message body"
+    },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string", "enum": ["IMAGE", "DOCUMENT", "AUDIO"] },
+          "url": { "type": "string" },
+          "filename": { "type": "string" }
+        }
+      }
+    },
+    "options": {
+      "type": "object",
+      "properties": {
+        "replyMarkup": { "type": "object" },
+        "priority": { "type": "string", "enum": ["LOW", "NORMAL", "HIGH"] }
+      }
+    }
+  }
+}

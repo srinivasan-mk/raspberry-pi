@@ -31,3 +31,12 @@ plugins:
     work_dir: "/opt/pi-plugins/messaging"
     env:
       TELEGRAM_BOT_TOKEN: "YOUR_TELEGRAM_BOT_TOKEN"
+
+  pihole:
+    enabled: true
+    mode: "exec"
+    command: "python3 /opt/pi-plugins/pihole/main.py"
+    timeout_sec: 60
+    work_dir: "/opt/pi-plugins/pihole"
+    env:
+      PIHOLE_API_URL: "http://127.0.0.1/api"

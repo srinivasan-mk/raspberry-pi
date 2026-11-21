@@ -1,0 +1,19 @@
+# ==============================================================================
+# Cross-Cutting Concern: Fail2ban Jail Configuration for Raspberry Pi Host
+# Copy to: /etc/fail2ban/jail.d/raspberry-pi.local
+# ==============================================================================
+
+[DEFAULT]
+bantime  = 1h
+findtime = 10m
+maxretry = 5
+banaction = ufw
+ignoreip = 127.0.0.1/8 ::1 192.168.0.0/16 10.0.0.0/8
+
+[sshd]
+enabled  = true
+port     = ssh
+logpath  = %(sshd_log)s
+backend  = %(sshd_backend)s
+maxretry = 3
+bantime  = 24h

@@ -4,13 +4,15 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-nativ
 interface PluginTriggerProps {
   onTriggerScraper: (target: string, mobileNumber: string) => void;
   onTriggerMessaging: (channel: string, recipient: string, content: string) => void;
+  onTriggerPihole?: (action: 'status' | 'enable' | 'disable' | 'update-gravity', durationSeconds?: number) => void;
 }
 
 export const PluginTriggerCard: React.FC<PluginTriggerProps> = ({
   onTriggerScraper,
   onTriggerMessaging,
+  onTriggerPihole,
 }) => {
-  const [activeTab, setActiveTab] = useState<'scraper' | 'messaging'>('scraper');
+  const [activeTab, setActiveTab] = useState<'scraper' | 'messaging' | 'pihole'>('scraper');
 
   // Scraper State
   const [scraperTarget, setScraperTarget] = useState<'jio-airfiber' | 'mock-test'>('jio-airfiber');
@@ -20,6 +22,9 @@ export const PluginTriggerCard: React.FC<PluginTriggerProps> = ({
   const [channel, setChannel] = useState<'TELEGRAM' | 'WHATSAPP' | 'SMS' | 'MOCK'>('TELEGRAM');
   const [recipient, setRecipient] = useState('');
   const [messageContent, setMessageContent] = useState('Alert from Raspberry Pi 4B');
+
+  // Pi-hole State
+  const [piholeAction, setPiholeAction] = useState<'status' | 'enable' | 'disable' | 'update-gravity'>('status');
 
   return (
     <View style={styles.card}>
@@ -39,7 +44,16 @@ export const PluginTriggerCard: React.FC<PluginTriggerProps> = ({
           onPress={() => setActiveTab('messaging')}
         >
           <Text style={[styles.tabText, activeTab === 'messaging' && styles.tabTextActive]}>
-            💬 Multi-Channel Messaging
+            💬 Messaging
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'pihole' && styles.tabActive]}
+          onPress={() => setActiveTab('pihole')}
+        >
+          <Text style={[styles.tabText, activeTab === 'pihole' && styles.tabTextActive]}>
+            🛡️ Pi-hole
           </Text>
         </TouchableOpacity>
       </View>
@@ -133,6 +147,51 @@ export const PluginTriggerCard: React.FC<PluginTriggerProps> = ({
             onPress={() => onTriggerMessaging(channel, recipient, messageContent)}
           >
             <Text style={styles.actionBtnText}>📨 Dispatch Alert</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Pi-hole Tab Content */}
+      {activeTab === 'pihole' && (
+        <View style={styles.content}>
+          <Text style={styles.description}>
+            Monitor and control the local Pi-hole DNS sinkhole: fetch live blocking metrics, toggle ad-blocking, or synchronize gravity lists over MQTT.
+          </Text>
+
+          <Text style={styles.label}>SELECT ACTION</Text>
+          <View style={styles.chipRow}>
+            {(
+              [
+                { id: 'status', label: '📊 Query Metrics' },
+                { id: 'disable', label: '⏸️ Disable (5m)' },
+                { id: 'enable', label: '▶️ Resume Blocking' },
+                { id: 'update-gravity', label: '🔄 Update Gravity' },
+              ] as const
+            ).map((act) => (
+              <TouchableOpacity
+                key={act.id}
+                style={[styles.chip, piholeAction === act.id && styles.chipActive]}
+                onPress={() => setPiholeAction(act.id)}
+              >
+                <Text
+                  style={[styles.chipText, piholeAction === act.id && styles.chipTextActive]}
+                >
+                  {act.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <TouchableOpacity
+            style={[styles.actionBtn, { backgroundColor: '#10b981' }]}
+            onPress={() => {
+              if (onTriggerPihole) {
+                const duration = piholeAction === 'disable' ? 300 : undefined;
+                onTriggerPihole(piholeAction, duration);
+              }
+            }}
+          >
+            <Text style={styles.actionBtnText}>🛡️ Dispatch Pi-hole Command</Text>
           </TouchableOpacity>
         </View>
       )}

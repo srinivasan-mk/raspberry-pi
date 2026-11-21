@@ -102,6 +102,13 @@ export default function App() {
     });
   };
 
+  const handleTriggerPihole = (action: string, durationSeconds?: number) => {
+    mqttService.publishCommand('pihole', action, {
+      action,
+      durationSeconds,
+    });
+  };
+
   const handleOtpSubmit = (sessionId: string, code: string) => {
     mqttService.sendInteractiveResponse(sessionId, code);
     setOtpPrompt(null);
@@ -137,6 +144,7 @@ export default function App() {
         <PluginTriggerCard
           onTriggerScraper={handleTriggerScraper}
           onTriggerMessaging={handleTriggerMessaging}
+          onTriggerPihole={handleTriggerPihole}
         />
 
         {/* Results Stream */}

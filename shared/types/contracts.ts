@@ -63,6 +63,7 @@ export interface PiTelemetry {
   uptimeSeconds?: number;
   cpuTempCelsius?: number;
   cpuUsagePercent?: number;
+  throttleState?: string;
   memory?: {
     totalMb: number;
     usedMb: number;
@@ -90,6 +91,19 @@ export interface MessagingPayload {
   };
 }
 
+export type PiholeAction = 'status' | 'enable' | 'disable' | 'update-gravity';
+
+export interface PiholeStatus {
+  status: 'enabled' | 'disabled';
+  domainsBeingBlocked: number;
+  dnsQueriesToday: number;
+  adsBlockedToday: number;
+  adsPercentageToday: number;
+  uniqueClients?: number;
+  gravityLastUpdated?: number;
+  timestamp: number;
+}
+
 // Standard MQTT Topics helper
 export const MQTT_TOPICS = {
   command: (pluginId: string, action: string) => `pi/commands/${pluginId}/${action}`,
@@ -103,4 +117,6 @@ export const MQTT_TOPICS = {
   interactiveResponseWildcard: 'pi/interactive/+/response',
   telemetryHealth: 'pi/telemetry/health',
   adminPlugins: 'pi/admin/plugins',
+  piholeCommand: (action: PiholeAction) => `pi/commands/pihole/${action}`,
+  piholeResult: 'pi/events/pihole/result',
 };
