@@ -1,6 +1,9 @@
-# Raspberry Pi 4B Modular Ecosystem - Holistic Architecture
+# Raspberry Pi 4B Ecosystem - Holistic Multi-Domain Architecture
 
-This document provides the high-level system architecture and operational domain segregation across **Pi-hole (Network DNS Sinkhole)**, the **Raspberry Pi Core Orchestrator**, and **Cross-Cutting Concerns**.
+This document provides the high-level system architecture and operational domain segregation across:
+1. **`raspberry-pi/`**: Host Hardware Platform, OS Hardening & Centralized Cross-Cutting Infrastructure
+2. **`home-automation/`**: Edge Orchestrator Daemon, Polyglot Plugins, and Client User Interfaces
+3. **`pi-hole/`**: Network DNS Sinkhole, Curated Blocklists, and Cloud Lists Updater
 
 ---
 
@@ -8,7 +11,7 @@ This document provides the high-level system architecture and operational domain
 
 ```mermaid
 flowchart TD
-    subgraph Clients["Client Layer"]
+    subgraph Clients["Client Layer (home-automation/apps/)"]
         MobileWeb["Mobile & Web App (React Native Expo)\n• Live Hardware Telemetry\n• Scraper & OTP Controls\n• Multi-Channel Alerts\n• Pi-hole DNS Controls"]
         FlutterFuture["Flutter Client (Future Add-on)"]
     end
@@ -18,7 +21,7 @@ flowchart TD
     end
 
     subgraph Host["Raspberry Pi 4B Host (Raspbian Lite 64-bit)"]
-        subgraph CCC["Cross-Cutting Concerns Layer (cross-cutting/)"]
+        subgraph CCC["Cross-Cutting Concerns Layer (raspberry-pi/cross-cutting/)"]
             HWSens["Hardware & Flash Wear\n(Thermal, vcgencmd throttled,\nSD commit=600, log2ram)"]
             SecLayer["Security & Hardening\n(UFW Firewall, Fail2ban,\nSecrets, 0600 Perms)"]
             LogObs["Structured Logging\n(JSON standard, logrotate)"]
@@ -27,7 +30,7 @@ flowchart TD
             Watchdog["Self-Healing\n(Watchdog, Backup snapshots)"]
         end
 
-        subgraph PiDaemon["Core Edge Platform (raspberry-pi/)"]
+        subgraph HomeAuto["Home Automation Domain (home-automation/)"]
             GoDaemon["Go Orchestrator Daemon (~12MB RAM)\n• 24/7 MQTT Client with LWT\n• Session Registry & OTP Handler\n• Ephemeral Process Runner"]
             
             subgraph Plugins["Polyglot Ephemeral Plugins (0 MB RAM Idle)"]
@@ -38,7 +41,7 @@ flowchart TD
         end
 
         subgraph PiHoleDomain["Network DNS Domain (pi-hole/)"]
-            FTL["Pi-hole FTL DNS Engine\n• Port 53 TCP/UDP\n• In-Memory Gravity DB (vmtouch)\n• 24h DBinterval Batching"]
+            FTL["Pi-hole FTL DNS Engine\n• Port 53 TCP/UDP\n• In-Memory Gravity DB (vmtouch)\n• DBinterval Write Batching"]
             Updatelists["Automated List Updater\nJacklul / Cloud Updater Cron"]
             CuratedLists["Curated Indian & Global Blocklists\n(HaGeZi, EasyList, UPI Whitelists)"]
         end
@@ -56,7 +59,8 @@ flowchart TD
     FTL --- CuratedLists
     FTL --- Updatelists
 
-    CCC -.->|Governs & Protects| PiDaemon
+    CCC -.->|Protects & Hardens| Host
+    CCC -.->|Governs & Monitors| HomeAuto
     CCC -.->|Governs & Protects| PiHoleDomain
 ```
 
@@ -64,10 +68,10 @@ flowchart TD
 
 ## 2. Domain Separation Matrix
 
-| Concern / Responsibility | `pi-hole/` Repository / Domain | `raspberry-pi/` Repository / Domain | `cross-cutting/` Layer |
+| Concern / Responsibility | `pi-hole/` Repository | `home-automation/` Repository | `raspberry-pi/` (Cross-Cutting Hub) |
 | :--- | :--- | :--- | :--- |
-| **Primary Responsibility** | Network-wide ad-blocking, DNS sinkhole, and privacy protection | Hardware orchestration, event-driven automation, and cloud integration | Shared system policies, health observation, security, and contracts |
-| **Network Interfaces** | Port 53 (DNS TCP/UDP), Port 80/443 (Local Web UI) | Port 8883 (MQTTS TLS), Port 8084 (WSS WebSockets) | Loopback, local subnets (RFC 1918), UFW firewall profiles |
+| **Primary Responsibility** | Network-wide ad-blocking, DNS sinkhole, and privacy protection | Hardware orchestration, event-driven automation, and cloud integration | Host OS baseline, hardware protection, security, and health |
+| **Network Interfaces** | Port 53 (DNS TCP/UDP), Port 80/443 (Local Web UI) | Port 8883 (MQTTS TLS), Port 8084 (WSS WebSockets) | Loopback, RFC 1918 subnets, UFW firewall rules |
 | **Process Model** | 24/7 background system service (`pihole-FTL.service`) | 24/7 Go daemon + on-demand ephemeral plugins (0 MB idle RAM) | Periodic systemd timers and cron jobs (watchdog, log2ram, backup) |
 | **Data Storage** | `/etc/pihole/gravity.db`, `/etc/pihole/pihole-FTL.db` | Stateless ephemeral execution (sessions stored in memory) | `/var/log` on tmpfs, `/etc/raspberry-pi/.env` (0600) |
 | **Extensibility** | List sources, regex rules, conditional forwarding | Polyglot plugins (Python, Node.js, Go, Docker) | Language-agnostic JSON Schemas and typed SDK contracts |

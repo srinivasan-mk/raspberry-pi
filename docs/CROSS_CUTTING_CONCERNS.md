@@ -14,7 +14,8 @@ cross-cutting/
 │   ├── check-hardware-health.sh
 │   ├── optimize-sd-card.sh
 │   ├── apply-fstab-commit.sh
-│   └── apply-kernel-writeback.sh
+│   ├── apply-kernel-writeback.sh
+│   └── apply-pihole-batching.sh
 ├── telemetry/             # Hardware observation engine & specifications
 │   ├── collector.go       # Reusable Go hardware observer (temp, RAM, throttling)
 │   ├── telemetry_collector.py # Standalone Python telemetry runner

@@ -175,9 +175,17 @@ raspberry-pi/
 ├── docker-compose.yml              # Local testing / simulation stack
 ├── docs/
 │   └── IMPLEMENTATION_PLAN.md      # Full architecture and implementation design
-├── shared/                         # Schemas & Type definitions
-│   ├── schemas/                    # JSON Schema files
-│   └── types/                      # TypeScript & Go type definitions
+├── cross-cutting/                  # Centralized Cross-Cutting Infrastructure
+│   ├── contracts/                  # Schemas & Type definitions
+│   │   ├── schemas/                # JSON Schema files
+│   │   ├── types/                  # TypeScript interfaces
+│   │   └── go/                     # Go type definitions
+│   ├── hardware/                   # MicroSD wear & thermal optimization
+│   ├── security/                   # UFW firewall & fail2ban hardening
+│   ├── logging/                    # Structured logging & log2ram
+│   ├── telemetry/                  # System health observer
+│   ├── networking/                 # DNS fallback & connection resilience
+│   └── maintenance/                # Watchdog & disaster recovery backup
 │
 ├── pi-daemon/                      # Standalone Go Orchestrator (~6MB RAM)
 │   ├── cmd/daemon/main.go

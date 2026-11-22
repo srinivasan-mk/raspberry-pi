@@ -177,7 +177,11 @@ if [ "${ACTION}" = "all" ] || [ "${ACTION}" = "pihole" ]; then
     echo ""
     echo "[*] Step: Pi-hole Database Write Batching..."
     if [ -f "${SCRIPT_DIR}/apply-pihole-batching.sh" ]; then
-        bash "${SCRIPT_DIR}/apply-pihole-batching.sh" "${PROFILE}"
+        if [ -d "/etc/pihole" ] || command -v pihole >/dev/null 2>&1; then
+            bash "${SCRIPT_DIR}/apply-pihole-batching.sh" "${PROFILE}"
+        else
+            echo "[*] Pi-hole is not installed on this host. Skipping Pi-hole database batching."
+        fi
     fi
 fi
 
